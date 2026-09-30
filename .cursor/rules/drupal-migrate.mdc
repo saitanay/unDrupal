@@ -1,0 +1,109 @@
+---
+description: Drupal migration and content export skills
+alwaysApply: false
+---
+
+# UnDrupal: AI Agent Skills
+
+These skills help you plan and execute a migration off Drupal (D7 through D11). Load the relevant skill file from `skills/` and follow its instructions.
+
+Start with `skills/00-quickstart.md`. It determines your situation, access level, Drupal version, migration target, and scope. It tells you which skills to run and in what order.
+
+## Rules
+
+1. Determine the Drupal version first. It changes available APIs, table schemas, and module locations.
+2. Use the best access method available, in this order:
+   - JSON:API for D9+ (in core, no contrib needed)
+   - Drush with shell access
+   - Direct database queries
+   - Config files (YAML exports)
+   - Admin UI or public URL as last resort
+3. Preserve UUIDs as stable cross-system identifiers.
+4. Output all exports as JSON with consistent schemas.
+5. Include provenance metadata: source site URL, export timestamp, Drupal version.
+6. Never export secrets. No API keys, password hashes, SMTP credentials, or payment gateway tokens.
+7. D7 has different table schemas than D8+. Check version before writing any SQL.
+8. Paragraph resolution is hard. Use Skill 12 for any site with Paragraphs contrib.
+9. Rich text contains Drupal-specific tokens (`<drupal-media>`, `[entity:node:123]`, linkit attributes). Use Skill 26 to clean them.
+10. Export first, map to target later. Skills produce neutral JSON. Target-specific mapping is a separate step.
+11. During audit, check for page builders (Experience Builder, Site Studio, Gutenberg). Each stores content in its own format. Route to the correct skill (33, 34, or 35) before exporting pages built with them.
+
+## Skills
+
+### Discovery and Audit
+
+| # | File | Purpose |
+|---|------|---------|
+| 0 | `skills/00-quickstart.md` | Decision tree: determine access, version, target, scope, execution order |
+| 1 | `skills/01-site-audit.md` | Full site audit: version, modules, content stats, integrations |
+| 2 | `skills/02-content-model-map.md` | Reverse-engineer content model: entity types, bundles, fields, relationships |
+| 3 | `skills/03-module-inventory.md` | Classify every module by migration impact, suggest target equivalents |
+
+### Configuration Export
+
+| # | File | Purpose |
+|---|------|---------|
+| 4 | `skills/04-content-types-fields.md` | Content type and field definitions: schema, not data |
+| 5 | `skills/05-views-export.md` | Views to abstract query definitions |
+| 6 | `skills/06-display-modes.md` | View modes, form modes, field group config |
+| 7 | `skills/07-text-formats-editors.md` | Text formats, filters, CKEditor config |
+| 8 | `skills/08-image-styles.md` | Image processing pipelines and responsive image config |
+| 9 | `skills/09-workflows-moderation.md` | Editorial workflows and content moderation states |
+| 10 | `skills/10-roles-permissions.md` | User roles, permissions, access control |
+
+### Content Export
+
+| # | File | Purpose |
+|---|------|---------|
+| 11 | `skills/11-nodes-content.md` | Export all node content with full field values |
+| 12 | `skills/12-paragraphs-deep.md` | Recursive paragraph tree resolution |
+| 13 | `skills/13-taxonomy-export.md` | Vocabularies, terms, hierarchy, cross-references |
+| 14 | `skills/14-media-files.md` | Media entities, file download manifest, usage map |
+| 15 | `skills/15-menu-navigation.md` | Menu definitions, links, tree structure |
+| 16 | `skills/16-blocks-layouts.md` | Block types, placements, Layout Builder data |
+| 17 | `skills/17-users-profiles.md` | User accounts, roles, custom profile fields |
+| 18 | `skills/18-comments.md` | Comments with threading and author attribution |
+| 19 | `skills/19-webforms.md` | Webform definitions, elements, conditional logic, submissions |
+
+### Specialized Exports
+
+| # | File | Purpose |
+|---|------|---------|
+| 20 | `skills/20-url-aliases-redirects.md` | Path aliases, redirects, pathauto patterns |
+| 21 | `skills/21-metatags-seo.md` | Meta tags, Open Graph, structured data, sitemaps |
+| 22 | `skills/22-multilingual.md` | Content and config translations, language negotiation |
+| 23 | `skills/23-commerce.md` | Products, variations, orders, payments, shipping |
+| 24 | `skills/24-search-indexes.md` | Search API config, index fields, facets |
+| 25 | `skills/25-custom-entities.md` | Non-core entity types: ECK, group, profile, custom |
+| 26 | `skills/26-rich-text-cleanup.md` | Strip Drupal-specific tokens and embedded media from HTML |
+| 27 | `skills/27-revision-history.md` | Node revision history with field values |
+| 28 | `skills/28-scheduled-content.md` | Scheduled publish and unpublish dates |
+| 29 | `skills/29-flags-bookmarks.md` | User-flagged content relationships |
+
+### Synthesis
+
+| # | File | Purpose |
+|---|------|---------|
+| 30 | `skills/30-migration-plan.md` | Full migration plan: mapping, sequence, risks, timeline |
+| 31 | `skills/31-validation-checklist.md` | Post-migration verification steps |
+| 32 | `skills/32-content-inventory.md` | Content audit spreadsheet with stats and orphan detection |
+
+### Page Builders and Platform
+
+| # | File | Purpose |
+|---|------|---------|
+| 33 | `skills/33-experience-builder.md` | Experience Builder (XB) — Drupal 11's canvas page builder |
+| 34 | `skills/34-site-studio.md` | Site Studio / Cohesion — Acquia's visual page builder |
+| 35 | `skills/35-gutenberg-drupal.md` | Gutenberg block editor on Drupal |
+| 36 | `skills/36-multisite-platform.md` | Multisite, Site Factory, Domain Access, hosting platforms |
+
+## How to Use
+
+1. Read `skills/00-quickstart.md` and walk through the decision tree with the user.
+2. Run `skills/01-site-audit.md` to get the lay of the land.
+3. Run `skills/02-content-model-map.md` to understand the content model.
+4. Run the remaining skills in the order recommended by the quickstart.
+5. Finish with `skills/30-migration-plan.md` to produce the final plan.
+6. Use `skills/31-validation-checklist.md` after migration to verify completeness.
+
+Each skill file contains full instructions: what to export, which access methods to use (JSON:API, Drush, SQL, config YAML), expected output format, and edge cases to watch for. Read the skill file, then execute.

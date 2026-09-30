@@ -1,0 +1,512 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/undrupal/content-model-schema.json",
+  "title": "Drupal Content Model Export",
+  "description": "Standard output format for content model exports produced by skills 02 and 04. Validates entity types, bundles, fields, relationships, and cardinality.",
+  "type": "object",
+  "required": ["drupal_version", "exported_at", "entity_types"],
+  "properties": {
+    "drupal_version": {
+      "type": "string",
+      "description": "Major Drupal version of the source site.",
+      "examples": ["7", "8", "9", "10", "11"]
+    },
+    "site_name": {
+      "type": "string",
+      "description": "Human-readable site name."
+    },
+    "site_uuid": {
+      "type": "string",
+      "description": "Site UUID from system.site config (D8+). Null for D7.",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+    },
+    "exported_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp of export."
+    },
+    "access_method": {
+      "type": "string",
+      "enum": ["config_export", "drush", "jsonapi", "database", "manual"],
+      "description": "How the data was extracted."
+    },
+    "entity_types": {
+      "type": "object",
+      "description": "Top-level map keyed by entity type machine name (node, taxonomy_term, media, paragraph, block_content, user, comment, commerce_product, etc.).",
+      "additionalProperties": {
+        "$ref": "#/definitions/entity_type"
+      }
+    },
+    "relationships": {
+      "type": "array",
+      "description": "All entity reference relationships across the content model.",
+      "items": {
+        "$ref": "#/definitions/relationship"
+      }
+    },
+    "field_reuse": {
+      "type": "array",
+      "description": "Fields shared across multiple bundles. Each entry lists one field storage and all bundles that use it.",
+      "items": {
+        "$ref": "#/definitions/field_reuse_entry"
+      }
+    }
+  },
+  "definitions": {
+    "entity_type": {
+      "type": "object",
+      "required": ["label", "bundles"],
+      "properties": {
+        "label": {
+          "type": "string",
+          "description": "Human-readable entity type label."
+        },
+        "provider": {
+          "type": "string",
+          "description": "Module that provides this entity type.",
+          "examples": ["node", "taxonomy", "media", "paragraphs", "commerce_product"]
+        },
+        "bundles": {
+          "type": "object",
+          "description": "Map keyed by bundle machine name.",
+          "additionalProperties": {
+            "$ref": "#/definitions/bundle"
+          }
+        }
+      }
+    },
+    "bundle": {
+      "type": "object",
+      "required": ["label", "fields"],
+      "properties": {
+        "label": {
+          "type": "string",
+          "description": "Human-readable bundle name."
+        },
+        "description": {
+          "type": ["string", "null"],
+          "description": "Bundle description from config."
+        },
+        "settings": {
+          "$ref": "#/definitions/bundle_settings"
+        },
+        "fields": {
+          "type": "object",
+          "description": "Map keyed by field machine name.",
+          "additionalProperties": {
+            "$ref": "#/definitions/field"
+          }
+        }
+      }
+    },
+    "bundle_settings": {
+      "type": "object",
+      "description": "Bundle-level configuration. Properties vary by entity type.",
+      "properties": {
+        "new_revision": {
+          "type": "boolean",
+          "description": "Create new revision by default (node bundles)."
+        },
+        "preview_mode": {
+          "type": "integer",
+          "enum": [0, 1, 2],
+          "description": "0 = disabled, 1 = optional, 2 = required (node bundles)."
+        },
+        "display_submitted": {
+          "type": "boolean",
+          "description": "Show author and date line (node bundles)."
+        },
+        "publishing_defaults": {
+          "type": "object",
+          "properties": {
+            "status": { "type": "boolean" },
+            "promote": { "type": "boolean" },
+            "sticky": { "type": "boolean" }
+          }
+        },
+        "menu_settings": {
+          "type": "object",
+          "properties": {
+            "available_menus": {
+              "type": "array",
+              "items": { "type": "string" }
+            },
+            "parent": { "type": "string" }
+          }
+        },
+        "language_settings": {
+          "type": "object",
+          "properties": {
+            "default_langcode": { "type": "string" },
+            "language_alterable": { "type": "boolean" }
+          }
+        },
+        "url_alias_pattern": {
+          "type": ["string", "null"],
+          "description": "Pathauto pattern for this bundle."
+        }
+      }
+    },
+    "field": {
+      "type": "object",
+      "required": ["label", "field_type", "cardinality"],
+      "properties": {
+        "label": {
+          "type": "string",
+          "description": "Human-readable field label."
+        },
+        "field_type": {
+          "type": "string",
+          "description": "Drupal field type plugin ID.",
+          "enum": [
+            "string",
+            "string_long",
+            "text",
+            "text_long",
+            "text_with_summary",
+            "integer",
+            "decimal",
+            "float",
+            "boolean",
+            "list_string",
+            "list_integer",
+            "list_float",
+            "entity_reference",
+            "entity_reference_revisions",
+            "file",
+            "image",
+            "link",
+            "datetime",
+            "daterange",
+            "timestamp",
+            "telephone",
+            "email",
+            "uri",
+            "address",
+            "geofield",
+            "geolocation",
+            "color_field",
+            "office_hours",
+            "name",
+            "viewfield",
+            "video_embed_field",
+            "metatag",
+            "tablefield",
+            "yearonly",
+            "weight",
+            "computed_field",
+            "dynamic_entity_reference"
+          ]
+        },
+        "description": {
+          "type": ["string", "null"],
+          "description": "Field help text shown on the edit form."
+        },
+        "required": {
+          "type": "boolean",
+          "description": "Whether the field is required."
+        },
+        "translatable": {
+          "type": "boolean",
+          "description": "Whether the field is translatable."
+        },
+        "cardinality": {
+          "$ref": "#/definitions/cardinality"
+        },
+        "default_value": {
+          "description": "Default value for the field. Type varies by field type."
+        },
+        "provider_module": {
+          "type": "string",
+          "description": "Module that provides this field type.",
+          "examples": ["core", "text", "options", "file", "image", "link", "datetime", "telephone", "paragraphs", "address", "geofield"]
+        },
+        "storage_settings": {
+          "$ref": "#/definitions/storage_settings"
+        },
+        "instance_settings": {
+          "$ref": "#/definitions/instance_settings"
+        }
+      }
+    },
+    "cardinality": {
+      "type": "integer",
+      "description": "-1 = unlimited. Positive integer = fixed maximum number of values.",
+      "minimum": -1
+    },
+    "storage_settings": {
+      "type": "object",
+      "description": "Field type-specific storage settings. Properties depend on field_type.",
+      "properties": {
+        "max_length": {
+          "type": "integer",
+          "description": "Maximum character length (string, text)."
+        },
+        "precision": {
+          "type": "integer",
+          "description": "Total digits for decimal fields."
+        },
+        "scale": {
+          "type": "integer",
+          "description": "Digits after decimal point."
+        },
+        "target_type": {
+          "type": "string",
+          "description": "Target entity type for entity_reference and entity_reference_revisions.",
+          "examples": ["node", "taxonomy_term", "media", "paragraph", "user", "file"]
+        },
+        "datetime_type": {
+          "type": "string",
+          "enum": ["date", "datetime"],
+          "description": "Date storage precision."
+        },
+        "allowed_values": {
+          "type": "array",
+          "description": "Key/label pairs for list fields.",
+          "items": {
+            "type": "object",
+            "required": ["value", "label"],
+            "properties": {
+              "value": { "type": ["string", "integer", "number"] },
+              "label": { "type": "string" }
+            }
+          }
+        },
+        "allowed_values_function": {
+          "type": ["string", "null"],
+          "description": "PHP callback that generates allowed values dynamically."
+        },
+        "on_label": {
+          "type": "string",
+          "description": "Boolean field ON label."
+        },
+        "off_label": {
+          "type": "string",
+          "description": "Boolean field OFF label."
+        },
+        "display_field": {
+          "type": "boolean",
+          "description": "Show display checkbox on file upload (file fields)."
+        },
+        "display_default": {
+          "type": "boolean",
+          "description": "Default display checkbox value (file fields)."
+        },
+        "default_image": {
+          "type": ["object", "null"],
+          "description": "Default image at storage level (image fields).",
+          "properties": {
+            "uuid": { "type": ["string", "null"] },
+            "alt": { "type": "string" },
+            "title": { "type": "string" },
+            "width": { "type": ["integer", "null"] },
+            "height": { "type": ["integer", "null"] }
+          }
+        },
+        "uri_scheme": {
+          "type": "string",
+          "enum": ["public", "private"],
+          "description": "File storage scheme."
+        }
+      }
+    },
+    "instance_settings": {
+      "type": "object",
+      "description": "Field instance settings. Properties depend on field_type.",
+      "properties": {
+        "handler": {
+          "type": "string",
+          "description": "Entity reference selection handler plugin ID.",
+          "examples": ["default:node", "default:taxonomy_term", "default:paragraph", "default:media", "views"]
+        },
+        "handler_settings": {
+          "$ref": "#/definitions/handler_settings"
+        },
+        "file_directory": {
+          "type": "string",
+          "description": "Token-based upload path for file/image fields."
+        },
+        "file_extensions": {
+          "type": "string",
+          "description": "Space-separated allowed file extensions."
+        },
+        "max_filesize": {
+          "type": "string",
+          "description": "Maximum file size string, e.g. '2 MB'."
+        },
+        "max_resolution": {
+          "type": "string",
+          "description": "Maximum image resolution, e.g. '1920x1080'."
+        },
+        "min_resolution": {
+          "type": "string",
+          "description": "Minimum image resolution."
+        },
+        "alt_field": {
+          "type": "boolean",
+          "description": "Show alt text input (image fields)."
+        },
+        "alt_field_required": {
+          "type": "boolean",
+          "description": "Require alt text (image fields)."
+        },
+        "title_field": {
+          "type": "boolean",
+          "description": "Show title input (image fields)."
+        },
+        "title_field_required": {
+          "type": "boolean",
+          "description": "Require title (image fields)."
+        },
+        "description_field": {
+          "type": "boolean",
+          "description": "Show description input (file fields)."
+        },
+        "link_type": {
+          "type": "integer",
+          "description": "1 = internal only, 16 = external only, 17 = both."
+        },
+        "title": {
+          "type": "integer",
+          "description": "Link title behavior. 0 = disabled, 1 = optional, 2 = required."
+        },
+        "min": {
+          "type": ["number", "null"],
+          "description": "Minimum value for numeric fields."
+        },
+        "max": {
+          "type": ["number", "null"],
+          "description": "Maximum value for numeric fields."
+        },
+        "prefix": {
+          "type": "string",
+          "description": "Display prefix for numeric fields."
+        },
+        "suffix": {
+          "type": "string",
+          "description": "Display suffix for numeric fields."
+        },
+        "text_processing": {
+          "type": "integer",
+          "enum": [0, 1],
+          "description": "1 = filtered through text format, 0 = plain."
+        },
+        "display_summary": {
+          "type": "boolean",
+          "description": "Show summary textarea (text_with_summary)."
+        },
+        "allowed_formats": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Restricted text format machine names."
+        }
+      }
+    },
+    "handler_settings": {
+      "type": "object",
+      "description": "Entity reference selection handler configuration.",
+      "properties": {
+        "target_bundles": {
+          "type": ["object", "null"],
+          "description": "Map of allowed bundle machine names. Null means all bundles.",
+          "additionalProperties": { "type": "string" }
+        },
+        "sort": {
+          "type": "object",
+          "properties": {
+            "field": { "type": "string" },
+            "direction": { "type": "string", "enum": ["ASC", "DESC"] }
+          }
+        },
+        "auto_create": {
+          "type": "boolean",
+          "description": "Create referenced entities on the fly (taxonomy terms)."
+        },
+        "auto_create_bundle": {
+          "type": "string",
+          "description": "Bundle to use when auto-creating."
+        },
+        "target_bundles_drag_drop": {
+          "type": "object",
+          "description": "Paragraph type ordering and enable/disable.",
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "enabled": { "type": "boolean" },
+              "weight": { "type": "integer" }
+            }
+          }
+        },
+        "negate": {
+          "type": "integer",
+          "enum": [0, 1],
+          "description": "0 = include listed bundles, 1 = exclude listed bundles."
+        }
+      }
+    },
+    "relationship": {
+      "type": "object",
+      "required": ["source_entity_type", "source_bundle", "field_name", "target_entity_type"],
+      "properties": {
+        "source_entity_type": {
+          "type": "string",
+          "description": "Entity type that holds the reference field."
+        },
+        "source_bundle": {
+          "type": "string",
+          "description": "Bundle that holds the reference field."
+        },
+        "field_name": {
+          "type": "string",
+          "description": "Machine name of the reference field."
+        },
+        "field_type": {
+          "type": "string",
+          "enum": ["entity_reference", "entity_reference_revisions", "dynamic_entity_reference"],
+          "description": "Reference field type."
+        },
+        "target_entity_type": {
+          "type": "string",
+          "description": "Referenced entity type."
+        },
+        "target_bundles": {
+          "type": ["array", "null"],
+          "items": { "type": "string" },
+          "description": "Allowed target bundles. Null means all bundles of the target entity type."
+        },
+        "cardinality": {
+          "$ref": "#/definitions/cardinality"
+        },
+        "required": {
+          "type": "boolean"
+        }
+      }
+    },
+    "field_reuse_entry": {
+      "type": "object",
+      "required": ["field_name", "field_type", "entity_type", "bundles"],
+      "properties": {
+        "field_name": {
+          "type": "string",
+          "description": "Shared field machine name."
+        },
+        "field_type": {
+          "type": "string",
+          "description": "Field type plugin ID."
+        },
+        "entity_type": {
+          "type": "string",
+          "description": "Entity type the field belongs to."
+        },
+        "bundles": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "All bundles that use this field."
+        },
+        "cardinality": {
+          "$ref": "#/definitions/cardinality"
+        }
+      }
+    }
+  }
+}
